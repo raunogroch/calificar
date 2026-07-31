@@ -16,29 +16,54 @@ EXPECTED_GATEWAY="192.168.100.1"
 EXPECTED_DNS="8.8.8.8"
 IFACE="enp0s3"
 
-# Puntajes por check (suman 160)
+# Puntajes por check (suman 100)
 declare -A SCORE
-SCORE[hostname]=15
-SCORE[interface]=15
-SCORE[ip]=15
-SCORE[gateway]=15
-SCORE[dns]=10
-SCORE[groups]=15
-SCORE[users]=15
-SCORE[directorio]=10
-SCORE[archivos]=10
-SCORE[compresion_respaldos]=15
-SCORE[script_bash]=10
-SCORE[docker]=15
-SCORE[docker_compose]=15
-SCORE[samba]=10
-SCORE[seguridad]=5
+SCORE[hostname]=5
+SCORE[interface]=10
+SCORE[ip]=10
+SCORE[gateway]=8
+SCORE[dns]=7
+SCORE[groups]=8
+SCORE[users]=7
+SCORE[directorio]=9
+SCORE[archivos]=8
+SCORE[compresion_respaldos]=9
+SCORE[script_bash]=8
+SCORE[docker]=8
+SCORE[docker_compose]=5
+SCORE[samba]=2
+SCORE[seguridad]=1
 
 total_score=0
 max_score=0
+RESULT_NAMES=()
+RESULT_POINTS=()
+RESULT_MAX=()
+ERRORS=()
 
-echo "Ejecutando comprobaciones por categoría (muestra puntos y fallos)."
+declare -A AREA_MAP
+AREA_MAP[hostname]="sistema"
+AREA_MAP[interface]="sistema"
+AREA_MAP[ip]="sistema"
+AREA_MAP[gateway]="sistema"
+AREA_MAP[dns]="sistema"
+AREA_MAP[seguridad]="sistema"
+AREA_MAP[groups]="usuarios y grupos"
+AREA_MAP[users]="usuarios y grupos"
+AREA_MAP[directorio]="directorios"
+AREA_MAP[archivos]="archivos"
+AREA_MAP[compresion_respaldos]="compresion y respaldos"
+AREA_MAP[script_bash]="script bash"
+AREA_MAP[docker]="docker"
+AREA_MAP[docker_compose]="docker-compose"
+AREA_MAP[samba]="samba"
 
+declare -A AREA_SCORE
+AREA_ORDER=("archivos" "compresion y respaldos" "directorios" "docker" "docker_compose" "samba" "script_bash" "sistema" "usuarios y grupos")
+
+echo "Ejecutando comprobaciones por categoría..."
+
+echo ""
 run_check() {
   name="$1"; shift
   # localizar script en checks/*/<name>.sh o checks/<name>.sh
@@ -49,9 +74,12 @@ run_check() {
       break
     fi
   done
+  area="${AREA_MAP[$name]}"
   if [[ -z "$script" ]]; then
-    echo "Script para check '$name' no encontrado"
-    printf "%-40s %3s / %3s\n" "$name" "0" "${SCORE[$name]}"
+    ERRORS+=("[$name] Script no encontrado")
+    ERRORS+=("  Max puntos: ${SCORE[$name]}")
+    ERRORS+=("")
+    AREA_SCORE["$area"]=$((AREA_SCORE["$area"]+0))
     return
   fi
   max_score=$((max_score+SCORE[$name]))
@@ -59,50 +87,67 @@ run_check() {
   points=$(echo "$out" | awk -F'POINTS:' '/POINTS:/ {print $2; exit}')
   points=${points:-0}
   total_score=$((total_score+points))
-  printf "%-40s %3s / %3s\n" "$name" "$points" "${SCORE[$name]}"
+  AREA_SCORE["$area"]=$((AREA_SCORE["$area"]+points))
   if (( points < SCORE[$name] )); then
-    echo "  Detalles:"
-    echo "$out" | sed -n '/POINTS:/!p'
+    ERRORS+=("[$name] $points/${SCORE[$name]}")
+    while IFS= read -r line; do
+      ERRORS+=("  $line")
+    done < <(echo "$out" | sed -n '/POINTS:/!p')
+    ERRORS+=("")
   fi
-  echo
 }
 
-echo "Sistema---------------------------------- puntos"
 run_check hostname "$EXPECTED_HOSTNAME"
 run_check interface "$IFACE"
 run_check ip "$IFACE" "$EXPECTED_IP"
 run_check gateway "$EXPECTED_GATEWAY"
 run_check dns "$EXPECTED_DNS"
 
-echo "Usuarios y grupos -------------------------- puntos"
 run_check groups administracion desarrollo soporte gerencia
 run_check users maria:administracion jose:desarrollo pedro:soporte laura:gerencia
 
-echo "Directorio -------------------------- puntos"
 run_check directorio
 
-echo "Archivos -------------------------- puntos"
 run_check archivos
 
-echo "Compresión y respaldos -------------------------- puntos"
 run_check compresion_respaldos
 
-echo "Script Bash -------------------------- puntos"
 run_check script_bash
 
-echo "Docker -------------------------- puntos"
 run_check docker
 
-echo "Docker Compose -------------------------- puntos"
 run_check docker_compose
 
-echo "Samba -------------------------- puntos"
 run_check samba
 
-echo "Seguridad -------------------------- puntos"
 run_check seguridad
 
-echo "Calificación total: $total_score / $max_score"
+echo ""
+echo "ERRORES:"
+if [[ ${#ERRORS[@]} -eq 0 ]]; then
+  echo "  Ninguno"
+else
+  for err in "${ERRORS[@]}"; do
+    echo "$err"
+  done
+fi
+
+echo ""
+echo "Tabla de puntajes por área:"
+printf "%-26s | %6s | %6s\n" "Área" "Puntos" "Máx."
+printf "%-25s-+-%6s-+-%6s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..6})" "$(printf '%.0s-' {1..6})"
+for area in "${AREA_ORDER[@]}"; do
+  max_area=0
+  for name in "${!AREA_MAP[@]}"; do
+    if [[ "${AREA_MAP[$name]}" == "$area" ]]; then
+      max_area=$((max_area+SCORE[$name]))
+    fi
+  done
+  printf "%-25s | %6s | %6s\n" "$area" "${AREA_SCORE[$area]:-0}" "$max_area"
+done
+printf "%-25s | %6s | %6s\n" "TOTAL" "$total_score" "$max_score"
+
+echo
 if (( total_score == max_score )); then
   exit 0
 else
