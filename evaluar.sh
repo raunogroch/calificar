@@ -15,7 +15,7 @@ EXPECTED_IP="192.168.100.10/24"
 EXPECTED_GATEWAY="192.168.100.1"
 IFACE="enp0s3"
 
-# Puntajes por check (suman 120)
+# Puntajes por check (suman 160)
 declare -A SCORE
 SCORE[hostname]=15
 SCORE[interface]=15
@@ -26,6 +26,12 @@ SCORE[groups]=15
 SCORE[users]=15
 SCORE[directorio]=10
 SCORE[archivos]=10
+SCORE[compresion_respaldos]=15
+SCORE[script_bash]=10
+SCORE[docker]=15
+SCORE[docker_compose]=15
+SCORE[samba]=10
+SCORE[seguridad]=5
 
 total_score=0
 max_score=0
@@ -76,6 +82,24 @@ run_check directorio
 
 echo "Archivos -------------------------- puntos"
 run_check archivos
+
+echo "Compresión y respaldos -------------------------- puntos"
+run_check compresion_respaldos
+
+echo "Script Bash -------------------------- puntos"
+run_check script_bash
+
+echo "Docker -------------------------- puntos"
+run_check docker
+
+echo "Docker Compose -------------------------- puntos"
+run_check docker_compose
+
+echo "Samba -------------------------- puntos"
+run_check samba
+
+echo "Seguridad -------------------------- puntos"
+run_check seguridad
 
 echo "Calificación total: $total_score / $max_score"
 if (( total_score == max_score )); then
