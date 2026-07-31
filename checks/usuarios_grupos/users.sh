@@ -29,11 +29,14 @@ for pair in "$@"; do
 
   if ! getent group "$req_group" >/dev/null; then
     echo " - Grupo esperado NO existe: $req_group"
-  elif id -nG "$user" | grep -qw "$req_group"; then
-    echo " - Usuario pertenece correctamente al grupo $req_group"
-    passed_checks=$((passed_checks+1))
   else
-    echo " - Usuario NO pertenece al grupo $req_group"
+    primary_group=$(id -gn "$user")
+    if [[ "$primary_group" == "$req_group" ]]; then
+      echo " - Grupo principal correcto: $primary_group"
+      passed_checks=$((passed_checks+1))
+    else
+      echo " - Grupo principal incorrecto: $primary_group (esperado: $req_group)"
+    fi
   fi
 
   echo ""
