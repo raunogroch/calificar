@@ -11,10 +11,27 @@ fi
 
 # Valores esperados
 EXPECTED_HOSTNAME="alphaserver"
-EXPECTED_IP="192.168.100.10/24"
-EXPECTED_GATEWAY="192.168.100.1"
 EXPECTED_DNS="8.8.8.8"
 IFACE="enp0s3"
+
+if [[ -n "$1" ]]; then
+  LAST_TWO_SEGMENTS="$1"
+else
+  read -rp "Ingrese los últimos dos segmentos de red (ej. 100.10): " LAST_TWO_SEGMENTS
+fi
+
+if [[ ! "$LAST_TWO_SEGMENTS" =~ ^([0-9]{1,3})\.([0-9]{1,3})$ ]]; then
+  echo "Formato inválido. Debe ingresarse como segmento3.segmento4, por ejemplo 100.10"
+  exit 1
+fi
+SEGMENT3="${BASH_REMATCH[1]}"
+SEGMENT4="${BASH_REMATCH[2]}"
+if (( SEGMENT3 < 0 || SEGMENT3 > 255 || SEGMENT4 < 0 || SEGMENT4 > 255 )); then
+  echo "Segmentos inválidos. Deben estar entre 0 y 255."
+  exit 1
+fi
+EXPECTED_IP="192.168.${SEGMENT3}.${SEGMENT4}/24"
+EXPECTED_GATEWAY="192.168.${SEGMENT3}.1"
 
 # Puntajes por check (suman 100)
 declare -A SCORE
