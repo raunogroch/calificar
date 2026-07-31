@@ -13,6 +13,7 @@ fi
 EXPECTED_HOSTNAME="alphaserver"
 EXPECTED_IP="192.168.100.10/24"
 EXPECTED_GATEWAY="192.168.100.1"
+EXPECTED_DNS="8.8.8.8"
 IFACE="enp0s3"
 
 # Puntajes por check (suman 160)
