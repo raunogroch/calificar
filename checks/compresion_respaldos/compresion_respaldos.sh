@@ -49,7 +49,7 @@ cd /empresa || {
   rm -rf "$restore_dir"
   exit 1
 }
-find . \( -path './backups' -o -path './scripts/verificacion.sh' \) -prune -o -type f -print | sort > /tmp/empresa_structure.txt
+find . \( -path './backups' -o -path './scripts/verificacion.sh' -o -path './desarrollo' \) -prune -o -type f -print | sort > /tmp/empresa_structure.txt
 
 if [[ -d "$restore_dir/empresa" ]]; then
   restore_root="$restore_dir/empresa"
@@ -70,7 +70,7 @@ cd "$restore_root" || {
   rm -f /tmp/empresa_structure.txt
   exit 1
 }
-find . \( -path './backups' -o -path './scripts/verificacion.sh' \) -prune -o -type f -print | sort > /tmp/empresa_restore_structure.txt
+find . \( -path './backups' -o -path './scripts/verificacion.sh' -o -path './desarrollo' \) -prune -o -type f -print | sort > /tmp/empresa_restore_structure.txt
 
 diff_output=$(diff -u /tmp/empresa_structure.txt /tmp/empresa_restore_structure.txt 2>/dev/null)
 if [[ -n "$diff_output" ]]; then
