@@ -48,8 +48,8 @@ AREA_MAP[ip]="sistema"
 AREA_MAP[gateway]="sistema"
 AREA_MAP[dns]="sistema"
 AREA_MAP[seguridad]="sistema"
-AREA_MAP[groups]="usuarios y grupos"
-AREA_MAP[users]="usuarios y grupos"
+AREA_MAP[users_groups]="usuarios y grupos"
+AREA_MAP[users_exist]="usuarios y grupos"
 AREA_MAP[directorio]="directorios"
 AREA_MAP[archivos]="archivos"
 AREA_MAP[compresion_respaldos]="compresion y respaldos"
@@ -109,8 +109,8 @@ run_check ip "$IFACE" "$EXPECTED_IP"
 run_check gateway "$EXPECTED_GATEWAY"
 run_check dns "$EXPECTED_DNS"
 
-run_check groups administracion desarrollo soporte gerencia
-run_check users maria:administracion jose:desarrollo pedro:soporte laura:gerencia
+run_check users_exist maria jose pedro laura
+run_check users_groups maria:administracion jose:desarrollo pedro:soporte laura:gerencia
 
 run_check directorio
 
