@@ -59,7 +59,7 @@ AREA_MAP[docker_compose]="docker-compose"
 AREA_MAP[samba]="samba"
 
 declare -A AREA_SCORE
-AREA_ORDER=("archivos" "compresion y respaldos" "directorios" "docker" "docker_compose" "samba" "script_bash" "sistema" "usuarios y grupos")
+AREA_ORDER=()
 
 echo "Ejecutando comprobaciones por categoría..."
 
@@ -80,6 +80,9 @@ run_check() {
     ERRORS+=("  Max puntos: ${SCORE[$name]}")
     ERRORS+=("")
     AREA_SCORE["$area"]=$((AREA_SCORE["$area"]+0))
+    if [[ ! " ${AREA_ORDER[*]} " =~ " $area " ]]; then
+      AREA_ORDER+=("$area")
+    fi
     return
   fi
   max_score=$((max_score+SCORE[$name]))
@@ -88,6 +91,9 @@ run_check() {
   points=${points:-0}
   total_score=$((total_score+points))
   AREA_SCORE["$area"]=$((AREA_SCORE["$area"]+points))
+  if [[ ! " ${AREA_ORDER[*]} " =~ " $area " ]]; then
+    AREA_ORDER+=("$area")
+  fi
   if (( points < SCORE[$name] )); then
     ERRORS+=("[$name] $points/${SCORE[$name]}")
     while IFS= read -r line; do
