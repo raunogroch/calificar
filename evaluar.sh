@@ -36,6 +36,7 @@ SCORE[seguridad]=1
 
 total_score=0
 max_score=0
+TOTAL_POSSIBLE=190
 RESULT_NAMES=()
 RESULT_POINTS=()
 RESULT_MAX=()
@@ -140,8 +141,8 @@ fi
 
 echo ""
 echo "Tabla de puntajes por área:"
-printf "%-26s | %6s\n" "Área" "Puntos"
-printf "%-25s-+-%6s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..6})"
+printf "%-26s | %12s\n" "Área" "Calificación"
+printf "%-25s-+-%12s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..12})"
 for area in "${AREA_ORDER[@]}"; do
   max_area=0
   for name in "${!AREA_MAP[@]}"; do
@@ -149,10 +150,13 @@ for area in "${AREA_ORDER[@]}"; do
       max_area=$((max_area+SCORE[$name]))
     fi
   done
-  printf "%-25s | %6s\n" "$area" "${AREA_SCORE[$area]:-0}"
+  area_points=${AREA_SCORE[$area]:-0}
+  converted=$(awk -v a="$area_points" -v T="$TOTAL_POSSIBLE" 'BEGIN{ if(T==0){printf "0.00"} else printf "%.2f", a*100/T }')
+  printf "%-25s | %12s\n" "$area" "$converted"
 done
-printf "%-25s-+-%6s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..6})"
-printf "%-25s | %6s\n" "Calificacion Final" "$total_score"
+printf "%-25s-+-%12s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..12})"
+final_conv=$(awk -v s="$total_score" -v T="$TOTAL_POSSIBLE" 'BEGIN{ if(T==0){printf "0.00"} else printf "%.2f", s*100/T }')
+printf "%-25s | %12s\n" "Calificacion Final" "$final_conv/100"
 
 echo
 if (( total_score == max_score )); then
