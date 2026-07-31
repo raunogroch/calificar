@@ -130,33 +130,40 @@ run_check samba
 run_check seguridad
 
 echo ""
-echo "ERRORES:"
-if [[ ${#ERRORS[@]} -eq 0 ]]; then
-  echo "  Ninguno"
-else
-  for err in "${ERRORS[@]}"; do
-    echo "$err"
-  done
-fi
-
-echo ""
-echo "Tabla de puntajes por área:"
-printf "%-26s | %12s\n" "Área" "Calificación"
-printf "%-25s-+-%12s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..12})"
-for area in "${AREA_ORDER[@]}"; do
-  max_area=0
-  for name in "${!AREA_MAP[@]}"; do
-    if [[ "${AREA_MAP[$name]}" == "$area" ]]; then
-      max_area=$((max_area+SCORE[$name]))
-    fi
-  done
-  area_points=${AREA_SCORE[$area]:-0}
-  converted=$(awk -v a="$area_points" -v T="$TOTAL_POSSIBLE" 'BEGIN{ if(T==0){printf "0.00"} else printf "%.2f", a*100/T }')
-  printf "%-25s | %12s\n" "$area" "$converted"
-done
-printf "%-25s-+-%12s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..12})"
+timestamp=$(date +"%d_%m_%Y - %H:%M:%S")
+output_dir="/empresa/publico"
+mkdir -p "$output_dir"
 final_conv=$(awk -v s="$total_score" -v T="$TOTAL_POSSIBLE" 'BEGIN{ if(T==0){printf "0.00"} else printf "%.2f", s*100/T }')
-printf "%-25s | %12s\n" "Calificacion Final" "$final_conv/100"
+if [[ ${#ERRORS[@]} -eq 0 ]]; then
+  echo "Felicitaciones, tienes 100/100"
+else
+  error_file="$output_dir/fallas_${timestamp}.txt"
+  printf "%s\n" "ERRORES:" > "$error_file"
+  for err in "${ERRORS[@]}"; do
+    printf "%s\n" "$err" >> "$error_file"
+  done
+  echo "Se creó la lista de errores en el directorio: $error_file"
+fi
+calificacion_file="$output_dir/calificacion_${timestamp}.txt"
+{
+  echo ""
+  echo "Tabla de puntajes por área:"
+  printf "%-26s | %12s\n" "Área" "Calificación"
+  printf "%-25s-+-%12s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..12})"
+  for area in "${AREA_ORDER[@]}"; do
+    max_area=0
+    for name in "${!AREA_MAP[@]}"; do
+      if [[ "${AREA_MAP[$name]}" == "$area" ]]; then
+        max_area=$((max_area+SCORE[$name]))
+      fi
+    done
+    area_points=${AREA_SCORE[$area]:-0}
+    converted=$(awk -v a="$area_points" -v T="$TOTAL_POSSIBLE" 'BEGIN{ if(T==0){printf "0.00"} else printf "%.2f", a*100/T }')
+    printf "%-25s | %12s\n" "$area" "$converted"
+  done
+  printf "%-25s-+-%12s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..12})"
+  printf "%-25s | %12s\n" "Calificacion Final" "$final_conv/100"
+} | tee "$calificacion_file"
 
 echo
 if (( total_score == max_score )); then
