@@ -140,8 +140,8 @@ fi
 
 echo ""
 echo "Tabla de puntajes por área:"
-printf "%-26s | %6s | %6s\n" "Área" "Puntos" "Máx."
-printf "%-25s-+-%6s-+-%6s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..6})" "$(printf '%.0s-' {1..6})"
+printf "%-26s | %6s\n" "Área" "Puntos"
+printf "%-25s-+-%6s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..6})"
 for area in "${AREA_ORDER[@]}"; do
   max_area=0
   for name in "${!AREA_MAP[@]}"; do
@@ -149,9 +149,10 @@ for area in "${AREA_ORDER[@]}"; do
       max_area=$((max_area+SCORE[$name]))
     fi
   done
-  printf "%-25s | %6s | %6s\n" "$area" "${AREA_SCORE[$area]:-0}" "$max_area"
+  printf "%-25s | %6s\n" "$area" "${AREA_SCORE[$area]:-0}"
 done
-printf "%-25s | %6s | %6s\n" "TOTAL" "$total_score" "$max_score"
+printf "%-25s-+-%6s\n" "$(printf '%.0s-' {1..25})" "$(printf '%.0s-' {1..6})"
+printf "%-25s | %6s\n" "Calificacion Final" "$total_score"
 
 echo
 if (( total_score == max_score )); then
